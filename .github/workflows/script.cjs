@@ -29,7 +29,7 @@ module.exports = async ({ github, context }) => {
   const failedJobs = otherJobs.filter(
     ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
   );
-  const notCompletedJobs = checks.filter(
+  const notCompletedJobs = otherJobs.filter(
     ({ status }) => status !== "completed"
   );
 
