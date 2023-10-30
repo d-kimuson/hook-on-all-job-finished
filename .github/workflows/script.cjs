@@ -11,11 +11,13 @@
 module.exports = async ({ github, context }) => {
   console.log(context);
 
-  const listForRef = await github.rest.checks.listForRef({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    ref: context.sha,
-  });
+  const listForRef = await github.rest.checks
+    .listForRef({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      ref: context.sha,
+    })
+    .then((res) => res.data.check_runs);
 
   console.log("listForRef", listForRef);
 };
