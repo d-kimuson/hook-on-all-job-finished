@@ -7,11 +7,15 @@
 
 /** @typedef {import("@actions/github").context} WorkflowRunContext */
 
-/** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<void>} */
-module.exports = async ({ github, context }) => {
-  console.log(`For ${context.job} in ${context.payload.workflow_run.path}`);
+/** @typedef {'SUCCESS_ALL' | 'FAILED' | 'IN_PROGRESS' | 'UNKNOWN'} CheckStatus */
 
-  console.log(context);
+const SELF_JOB_NAME = "check_if_all_job_finished";
+
+/** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<CheckStatus>} */
+module.exports = async ({ github, context }) => {
+  console.log(
+    `Check For ${context.job} in ${context.payload.workflow_run.path}`
+  );
 
   const checks = await github.rest.checks
     .listForRef({
@@ -21,14 +25,34 @@ module.exports = async ({ github, context }) => {
     })
     .then((res) => res.data.check_runs);
 
-  const suites = await github.rest.checks
-    .listSuitesForRef({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      ref: context.sha,
-    })
-    .then((res) => res.data.check_suites);
+  const otherJobs = checks.filter(({ name }) => name !== SELF_JOB_NAME);
+  const failedJobs = otherJobs.filter(
+    ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
+  );
+  const notCompletedJobs = checks.filter(
+    ({ status }) => status !== "completed"
+  );
 
-  console.log("checks", checks);
-  console.log("suites", suites);
+  /** @type {CheckStatus} */
+  const status = (() => {
+    if (failedJobs.length > 0) {
+      return "FAILED";
+    } else if (notCompletedJobs.length === 0) {
+      if (
+        otherJobs.every(
+          ({ conclusion }) =>
+            conclusion === "success" || conclusion === "skipped"
+        )
+      ) {
+        return "SUCCESS_ALL";
+      } else {
+        return "UNKNOWN"; // 完了はしているが想定していない conclusion が帰ってきている
+      }
+    } else {
+      return "IN_PROGRESS";
+    }
+  })();
+
+  console.log("status", status);
+  return status;
 };
