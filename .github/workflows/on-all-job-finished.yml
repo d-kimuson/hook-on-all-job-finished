@@ -22,16 +22,16 @@ jobs:
         id: test
         with:
           script: |
-            const list = await github.checks.listForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'staging',
-              check_name: 'staging-test',
-              filter: 'latest'
-            });
+            // const list = await github.checks.listForRef({
+            //   owner: context.repo.owner,
+            //   repo: context.repo.repo,
+            //   ref: 'staging',
+            //   check_name: 'staging-test',
+            //   filter: 'latest'
+            // });
 
-            console.log(list)
-            console.log()
+            // console.log(list)
+            console.log(github)
 
-            return JSON.stringigy(list)
+            // return JSON.stringigy(list)
           result-encoding: string
