@@ -2,8 +2,12 @@ name: on-all-job-finished
 
 on:
   workflow_run:
+    workflows:
+      - "*"
     types:
       - completed
+  # check_run:
+  #   types: [completed]
 
 jobs:
   check:
@@ -25,6 +29,9 @@ jobs:
               check_name: 'staging-test',
               filter: 'latest'
             });
+
+            console.log(list)
+            console.log()
 
             return JSON.stringigy(list)
           result-encoding: string
