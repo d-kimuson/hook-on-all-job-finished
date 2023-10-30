@@ -27,3 +27,4 @@ jobs:
             await script({ github, context })
             return 'tmp'
           result-encoding: string
+          github-token: ${{ secrets.GITHUB_TOKEN }}
