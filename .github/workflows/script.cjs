@@ -10,6 +10,8 @@
 /** @typedef {'SUCCESS_ALL' | 'FAILED' | 'IN_PROGRESS' | 'UNKNOWN'} CheckStatus */
 
 const SELF_JOB_NAME = "check_if_all_job_finished";
+/** @type {ReadonlyArray<string>} */
+const IGNORE_WORKFLOW_NAMES = [];
 
 /** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<CheckStatus>} */
 module.exports = async ({ github, context }) => {
@@ -22,7 +24,10 @@ module.exports = async ({ github, context }) => {
       ref: context.sha,
     })
     .then((res) =>
-      res.data.check_runs.filter(({ name }) => name !== SELF_JOB_NAME)
+      res.data.check_runs.filter(
+        ({ name }) =>
+          name !== SELF_JOB_NAME && !IGNORE_WORKFLOW_NAMES.includes(name)
+      )
     );
 
   const failedJobChecks = otherJobChecks.filter(
