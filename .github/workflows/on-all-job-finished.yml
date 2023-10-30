@@ -1,0 +1,30 @@
+name: on-all-job-finished
+
+on:
+  workflow_run:
+    types:
+      - completed
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: actions/github-script@v6
+        id: test
+        with:
+          script: |
+            const list = await github.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'staging',
+              check_name: 'staging-test',
+              filter: 'latest'
+            });
+
+            return JSON.stringigy(list)
+          result-encoding: string
