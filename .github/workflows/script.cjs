@@ -17,5 +17,5 @@ module.exports = async ({ github, context }) => {
     ref: context.sha,
   });
 
-  console.log(listForRef);
+  console.log("listForRef", listForRef);
 };
