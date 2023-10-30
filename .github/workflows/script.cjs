@@ -9,9 +9,11 @@
 
 /** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<void>} */
 module.exports = async ({ github, context }) => {
+  console.log(`For ${context.job} in ${context.payload.workflow_run.path}`);
+
   console.log(context);
 
-  const listForRef = await github.rest.checks
+  const checks = await github.rest.checks
     .listForRef({
       owner: context.repo.owner,
       repo: context.repo.repo,
@@ -19,5 +21,14 @@ module.exports = async ({ github, context }) => {
     })
     .then((res) => res.data.check_runs);
 
-  console.log("listForRef", listForRef);
+  const suites = await github.rest.checks
+    .listSuitesForRef({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      ref: context.sha,
+    })
+    .then((res) => res.data.check_suites);
+
+  console.log("checks", checks);
+  console.log("suites", suites);
 };
