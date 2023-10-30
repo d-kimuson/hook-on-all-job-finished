@@ -7,15 +7,15 @@
 
 /** @typedef {import("@actions/github").context} WorkflowRunContext */
 
-/** @type {(arg: { github: OctokitClient, context: WorkflowRunContext }) => Promise<void>} */
+/** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<void>} */
 module.exports = async ({ github, context }) => {
-  // const list = await github.checks.listForRef({
-  //   owner: context.repo.owner,
-  //   repo: context.repo.repo,
-  //   ref: context.ref,
-  // });
-  console.log("context", context);
-  // console.log("list", list);
+  console.log(context);
 
-  console.log("github", github);
+  const listForRef = await github.rest.checks.listForRef({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    ref: context.sha,
+  });
+
+  console.log(listForRef);
 };

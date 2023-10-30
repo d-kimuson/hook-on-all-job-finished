@@ -1,4 +1,4 @@
-name: ci
+name: ci2
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-1:
+  check-3:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -19,14 +19,3 @@ jobs:
 
       - name: Lint
         run: echo "Lint done."
-
-  check-2:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Lint
-        run: echo "Lint done (2)."
