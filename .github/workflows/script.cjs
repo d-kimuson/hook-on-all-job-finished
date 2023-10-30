@@ -46,9 +46,11 @@ module.exports = async ({ github, context }) => {
       ) {
         return "SUCCESS_ALL";
       } else {
+        console.log(otherJobs);
         return "UNKNOWN"; // 完了はしているが想定していない conclusion が帰ってきている
       }
     } else {
+      console.log(notCompletedJobs);
       return "IN_PROGRESS";
     }
   })();
