@@ -10,7 +10,7 @@ on:
   #   types: [completed]
 
 jobs:
-  check:
+  check_if_all_job_finished:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

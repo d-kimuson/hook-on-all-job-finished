@@ -1,4 +1,4 @@
-name: ci2
+name: ci2_workflow
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-3:
+  check_3_job:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
