@@ -13,44 +13,43 @@ const SELF_JOB_NAME = "check_if_all_job_finished";
 
 /** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<CheckStatus>} */
 module.exports = async ({ github, context }) => {
-  console.log(
-    `Check For ${context.job} in ${context.payload.workflow_run.path}`
-  );
+  console.log(`Check For ${context.payload.workflow_run.path}`);
 
-  const checks = await github.rest.checks
+  const otherJobChecks = await github.rest.checks
     .listForRef({
       owner: context.repo.owner,
       repo: context.repo.repo,
       ref: context.sha,
     })
-    .then((res) => res.data.check_runs);
+    .then((res) =>
+      res.data.check_runs.filter(({ name }) => name !== SELF_JOB_NAME)
+    );
 
-  const otherJobs = checks.filter(({ name }) => name !== SELF_JOB_NAME);
-  const failedJobs = otherJobs.filter(
+  const failedJobChecks = otherJobChecks.filter(
     ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
   );
-  const notCompletedJobs = otherJobs.filter(
+  const notCompletedJobChecks = otherJobChecks.filter(
     ({ status }) => status !== "completed"
   );
 
   /** @type {CheckStatus} */
   const status = (() => {
-    if (failedJobs.length > 0) {
+    if (failedJobChecks.length > 0) {
       return "FAILED";
-    } else if (notCompletedJobs.length === 0) {
+    } else if (notCompletedJobChecks.length === 0) {
       if (
-        otherJobs.every(
+        otherJobChecks.every(
           ({ conclusion }) =>
             conclusion === "success" || conclusion === "skipped"
         )
       ) {
         return "SUCCESS_ALL";
       } else {
-        console.log(otherJobs);
+        console.log(otherJobChecks);
         return "UNKNOWN"; // 完了はしているが想定していない conclusion が帰ってきている
       }
     } else {
-      console.log(notCompletedJobs);
+      console.log(notCompletedJobChecks);
       return "IN_PROGRESS";
     }
   })();
