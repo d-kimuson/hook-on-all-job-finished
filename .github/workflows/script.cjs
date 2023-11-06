@@ -7,7 +7,7 @@
 
 /** @typedef {import("@actions/github").context} WorkflowRunContext */
 
-/** @typedef {'SUCCESS_ALL' | 'INITIALLY_FAILED' | 'FAILED' | 'IN_PROGRESS' | 'UNKNOWN'} CheckStatus */
+/** @typedef {'SUCCESS_ALL' | 'IN_PROGRESS' | 'FAILED_INPROGRESS' | 'FAILED_AND_COMPLETED' | 'CANCELED' | 'UNKNOWN'} CheckStatus */
 
 const SELF_JOB_NAME = "check_if_all_job_finished";
 /** @type {ReadonlyArray<string>} */
@@ -15,12 +15,7 @@ const IGNORE_WORKFLOW_NAMES = [];
 
 /** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<CheckStatus>} */
 module.exports = async ({ github, context }) => {
-  /** @type {string} */ // @ts-expect-error
-  const workflowName = context.workflow.name;
-
-  console.log(
-    `Check For ${workflowName} in ${context.payload.workflow_run.path}`
-  );
+  console.log(`Check For ${context.payload.workflow_run.path}`);
 
   const otherJobChecks = await github.rest.checks
     .listForRef({
@@ -54,28 +49,34 @@ module.exports = async ({ github, context }) => {
     ({ status }) => status !== "completed"
   );
 
-  console.log(context);
-  console.log("failedJobChecks", failedJobChecks);
-  console.log("notCompletedJobChecks", notCompletedJobChecks);
-  console.log("otherJobChecks", otherJobChecks);
-
   /** @type {CheckStatus} */
   const status = (() => {
-    if (failedJobChecks.length > 0) {
-      return "FAILED";
+    if (failedJobChecks.length > 1) {
+      // FAILED
+      if (notCompletedJobChecks.length === 0) return "FAILED_AND_COMPLETED";
+
+      return "FAILED_INPROGRESS";
     } else if (notCompletedJobChecks.length === 0) {
+      // SUCCESS
       if (
         otherJobChecks.every(
           ({ conclusion }) =>
-            conclusion === "success" || conclusion === "skipped"
+            conclusion === "success" ||
+            conclusion === "skipped" ||
+            conclusion === "action_required"
         )
       ) {
         return "SUCCESS_ALL";
-      } else {
-        console.log(otherJobChecks);
-        return "UNKNOWN"; // 完了はしているが想定していない conclusion が帰ってきている
       }
+
+      if (otherJobChecks.some(({ conclusion }) => conclusion === "cancelled"))
+        return "CANCELED";
+
+      console.log(otherJobChecks);
+      return "UNKNOWN"; // 完了はしているが想定していない conclusion が帰ってきている
     } else {
+      // INPROGRESS
+
       console.log(notCompletedJobChecks);
       return "IN_PROGRESS";
     }
