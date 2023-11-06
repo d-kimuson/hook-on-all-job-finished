@@ -30,20 +30,9 @@ module.exports = async ({ github, context }) => {
       )
     );
 
-  const failedJobChecks = otherJobChecks
-    .filter(
-      ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
-    )
-    .slice()
-    .sort((a, b) => {
-      if (a.completed_at === null) return 1;
-      if (b.completed_at === null) return 1;
-
-      return (
-        new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime()
-      );
-    })
-    .filter(({ completed_at }) => completed_at !== null);
+  const failedJobChecks = otherJobChecks.filter(
+    ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
+  );
 
   const notCompletedJobChecks = otherJobChecks.filter(
     ({ status }) => status !== "completed"

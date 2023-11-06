@@ -26,3 +26,8 @@ jobs:
             return await require('./.github/workflows/script.cjs')({ github, context })
           result-encoding: string
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: log_success
+        if: steps.all-workflow-summary.outputs.result == 'SUCCESS_ALL'
+        run: |
+          echo "すべてのチェックが成功しました:tada:"
