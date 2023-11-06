@@ -37,6 +37,7 @@ module.exports = async ({ github, context }) => {
     ({ status }) => status !== "completed"
   );
 
+  console.log(context);
   console.log(notCompletedJobChecks);
 
   /** @type {CheckStatus} */
