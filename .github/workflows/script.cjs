@@ -57,6 +57,7 @@ module.exports = async ({ github, context }) => {
   console.log(context);
   console.log("failedJobChecks", failedJobChecks);
   console.log("notCompletedJobChecks", notCompletedJobChecks);
+  console.log("otherJobChecks", otherJobChecks);
 
   /** @type {CheckStatus} */
   const status = (() => {
