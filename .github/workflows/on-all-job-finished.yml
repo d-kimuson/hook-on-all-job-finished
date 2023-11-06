@@ -1,11 +1,13 @@
 name: on-all-job-finished
 
 on:
-  workflow_run:
-    workflows:
-      - "*"
-    types:
-      - completed
+  # workflow_run:
+  #   workflows:
+  #     - "*"
+  #   types:
+  #     - completed
+  check_run:
+    types: "completed"
 
 jobs:
   check_if_all_job_finished:
