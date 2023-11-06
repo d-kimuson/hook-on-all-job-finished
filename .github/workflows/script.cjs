@@ -7,7 +7,7 @@
 
 /** @typedef {import("@actions/github").context} WorkflowRunContext */
 
-/** @typedef {'SUCCESS_ALL' | 'FAILED' | 'IN_PROGRESS' | 'UNKNOWN'} CheckStatus */
+/** @typedef {'SUCCESS_ALL' | 'INITIALLY_FAILED' | 'FAILED' | 'IN_PROGRESS' | 'UNKNOWN'} CheckStatus */
 
 const SELF_JOB_NAME = "check_if_all_job_finished";
 /** @type {ReadonlyArray<string>} */
@@ -15,7 +15,12 @@ const IGNORE_WORKFLOW_NAMES = [];
 
 /** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<CheckStatus>} */
 module.exports = async ({ github, context }) => {
-  console.log(`Check For ${context.payload.workflow_run.path}`);
+  /** @type {string} */ // @ts-expect-error
+  const workflowName = context.workflow.name;
+
+  console.log(
+    `Check For ${workflowName} in ${context.payload.workflow_run.path}`
+  );
 
   const otherJobChecks = await github.rest.checks
     .listForRef({
@@ -30,15 +35,28 @@ module.exports = async ({ github, context }) => {
       )
     );
 
-  const failedJobChecks = otherJobChecks.filter(
-    ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
-  );
+  const failedJobChecks = otherJobChecks
+    .filter(
+      ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
+    )
+    .slice()
+    .sort((a, b) => {
+      if (a.completed_at === null) return 1;
+      if (b.completed_at === null) return 1;
+
+      return (
+        new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime()
+      );
+    })
+    .filter(({ completed_at }) => completed_at !== null);
+
   const notCompletedJobChecks = otherJobChecks.filter(
     ({ status }) => status !== "completed"
   );
 
   console.log(context);
-  console.log(notCompletedJobChecks);
+  console.log("failedJobChecks", failedJobChecks);
+  console.log("notCompletedJobChecks", notCompletedJobChecks);
 
   /** @type {CheckStatus} */
   const status = (() => {
