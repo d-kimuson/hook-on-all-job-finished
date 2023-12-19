@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - uses: actions/github-script@v6
         id: all-workflow-summary
