@@ -12,23 +12,40 @@
 const SELF_JOB_NAME = "check_if_all_job_finished";
 /** @type {ReadonlyArray<string>} */
 const IGNORE_WORKFLOW_NAMES = [];
+const PER_PAGE = 1;
 
 /** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<CheckStatus>} */
 module.exports = async ({ github, context }) => {
   console.log(`Check For ${context.payload.workflow_run.path}`);
 
-  const otherJobChecks = await github.rest.checks
-    .listForRef({
+  const fetchRuns = async (page = 1) =>
+    github.rest.checks.listForRef({
       owner: context.repo.owner,
       repo: context.repo.repo,
       ref: context.sha,
-    })
-    .then((res) =>
-      res.data.check_runs.filter(
-        ({ name }) =>
-          name !== SELF_JOB_NAME && !IGNORE_WORKFLOW_NAMES.includes(name)
-      )
+      per_page: PER_PAGE,
+      page,
+    });
+
+  const otherJobChecks = await fetchRuns(1).then(async (res) => {
+    const totalCount = res.data.total_count;
+    const runsPage1 = res.data.check_runs.filter(
+      ({ name }) =>
+        name !== SELF_JOB_NAME && !IGNORE_WORKFLOW_NAMES.includes(name)
     );
+
+    const allRuns = await Promise.all(
+      Array.from({ length: Math.ceil(totalCount / PER_PAGE) - 1 })
+        .map((_, i) => i + 2)
+        .map((page) => fetchRuns(page).then((res) => res.data.check_runs))
+    ).then((check_runs) => runsPage1.concat(check_runs.flat()));
+
+    console.log("totalCount", totalCount);
+    console.log("runsPage1", runsPage1);
+    console.log("allRuns", allRuns);
+
+    return allRuns;
+  });
 
   const failedJobChecks = otherJobChecks.filter(
     ({ conclusion }) => conclusion === "failure" || conclusion === "timed_out"
