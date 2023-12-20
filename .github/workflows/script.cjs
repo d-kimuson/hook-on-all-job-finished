@@ -12,7 +12,7 @@
 const SELF_JOB_NAME = "check_if_all_job_finished";
 /** @type {ReadonlyArray<string>} */
 const IGNORE_WORKFLOW_NAMES = [];
-const PER_PAGE = 1;
+const PER_PAGE = 100;
 
 /** @type {(arg: { github: { rest: OctokitClient }, context: WorkflowRunContext }) => Promise<CheckStatus>} */
 module.exports = async ({ github, context }) => {
@@ -43,10 +43,6 @@ module.exports = async ({ github, context }) => {
             name !== SELF_JOB_NAME && !IGNORE_WORKFLOW_NAMES.includes(name)
         )
     );
-
-    console.log("totalCount", totalCount);
-    console.log("runsPage1", runsPage1);
-    console.log("allRuns", allRuns);
 
     return allRuns;
   });
@@ -82,12 +78,12 @@ module.exports = async ({ github, context }) => {
       if (otherJobChecks.some(({ conclusion }) => conclusion === "cancelled"))
         return "CANCELED";
 
-      console.log(otherJobChecks);
+      console.log("otherJobChecks", otherJobChecks);
       return "UNKNOWN"; // 完了はしているが想定していない conclusion が帰ってきている
     } else {
       // INPROGRESS
 
-      console.log(notCompletedJobChecks);
+      console.log("notCompletedJobChecks", notCompletedJobChecks);
       return "IN_PROGRESS";
     }
   })();
