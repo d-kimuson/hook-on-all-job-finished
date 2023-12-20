@@ -29,16 +29,20 @@ module.exports = async ({ github, context }) => {
 
   const otherJobChecks = await fetchRuns(1).then(async (res) => {
     const totalCount = res.data.total_count;
-    const runsPage1 = res.data.check_runs.filter(
-      ({ name }) =>
-        name !== SELF_JOB_NAME && !IGNORE_WORKFLOW_NAMES.includes(name)
-    );
+    const runsPage1 = res.data.check_runs;
 
     const allRuns = await Promise.all(
       Array.from({ length: Math.ceil(totalCount / PER_PAGE) - 1 })
         .map((_, i) => i + 2)
         .map((page) => fetchRuns(page).then((res) => res.data.check_runs))
-    ).then((check_runs) => runsPage1.concat(check_runs.flat()));
+    ).then((check_runs) =>
+      runsPage1
+        .concat(check_runs.flat())
+        .filter(
+          ({ name }) =>
+            name !== SELF_JOB_NAME && !IGNORE_WORKFLOW_NAMES.includes(name)
+        )
+    );
 
     console.log("totalCount", totalCount);
     console.log("runsPage1", runsPage1);
